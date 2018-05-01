@@ -17,3 +17,17 @@ Where:
     width - The width of the access (8, 16 or 32)
     val - The value to write (if writing, or empty if reading)
 ~~~~
+
+## IO
+A tool to read/write IO space
+
+~~~~
+IO read/write utility
+Usage:
+    ./io <reg> [val]
+
+Where:
+    reg - The IO register to read/write (0-0xffff)
+    val - The value to write (if writing, or empty if reading)
+~~~~
+
