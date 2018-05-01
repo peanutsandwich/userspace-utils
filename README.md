@@ -18,6 +18,8 @@ Where:
     val - The value to write (if writing, or empty if reading)
 ~~~~
 
+Note, this is not intended to provide access to BARs or anything like that. See https://github.com/billfarrow/pcimem for a tool that will accomplish this.
+
 ## IO
 A tool to read/write IO space
 
