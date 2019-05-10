@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,12 +33,13 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#define OP_INDEX        1
-#define BUS_INDEX       2
-#define ADDR_INDEX      3
-#define ARGS_START      4
-#define OP_RD           0
-#define OP_WR           1
+#define SMBUS_MAX_BLOCK_LEN             32
+#define OP_INDEX                        1
+#define BUS_INDEX                       2
+#define ADDR_INDEX                      3
+#define ARGS_START                      4
+#define OP_RD                           0
+#define OP_WR                           1
 
 static void print_usage(
     void);
@@ -454,13 +456,25 @@ static int do_smbus_transfer(
              * we write */
             unsigned char dev_offset = wr_data[0];
 
+            uint32_t this_len = SMBUS_MAX_BLOCK_LEN;
+            uint8_t block_buffer[SMBUS_MAX_BLOCK_LEN+1] = {0};
+
             while(offset < (wr_count - offset_len)) {
                 struct i2c_smbus_ioctl_data smb;
 
+                if((offset + SMBUS_MAX_BLOCK_LEN) > (wr_count - offset_len)) {
+                    this_len = (wr_count - offset_len) - offset;
+                } else {
+                    this_len = SMBUS_MAX_BLOCK_LEN;
+                }
+
+                block_buffer[0] = this_len;
+                memcpy(&block_buffer[1], &wr_data[offset_len + offset], this_len);
+
                 smb.read_write = I2C_SMBUS_WRITE;
                 smb.command = dev_offset;
-                smb.size = I2C_SMBUS_BYTE_DATA;
-                smb.data = &wr_data[offset_len + offset];
+                smb.size = I2C_SMBUS_I2C_BLOCK_DATA;
+                smb.data = block_buffer;
 
                 ret = ioctl(bus, I2C_SMBUS, &smb);
                 if(ret < 0) {
@@ -468,8 +482,8 @@ static int do_smbus_transfer(
                     return -1;
                 }
 
-                ++offset;
-                ++dev_offset;
+                offset += this_len;
+                dev_offset += this_len;
 
                 /* Wait between bytes - we could be talking to an eeprom and we
                  * get a NACK if it is busy committing data to the device */
@@ -482,23 +496,35 @@ static int do_smbus_transfer(
              * the offset for each byte we write */
             unsigned short dev_offset = wr_data[0] << 8 | wr_data[1];
 
+            uint32_t this_len = SMBUS_MAX_BLOCK_LEN;
+            uint8_t block_buffer[SMBUS_MAX_BLOCK_LEN + 1] = {0};
+
             while(offset < (wr_count - offset_len)) {
                 struct i2c_smbus_ioctl_data smb;
-                unsigned short data = (wr_data[offset_len + offset] << 8) | dev_offset & 0xff;
+
+                if((offset + (SMBUS_MAX_BLOCK_LEN - 1)) > (wr_count - offset_len)) {
+                    this_len = (wr_count - offset_len) - offset;
+                } else {
+                    this_len = SMBUS_MAX_BLOCK_LEN-1;
+                }
+
+                block_buffer[0] = this_len + 1;
+                block_buffer[1] = dev_offset & 0xff;
+                memcpy(&block_buffer[2], &wr_data[offset + offset_len], this_len);
 
                 smb.read_write = I2C_SMBUS_WRITE;
                 smb.command = dev_offset >> 8;
-                smb.size = I2C_SMBUS_WORD_DATA;
-                smb.data = &data;
+                smb.size = I2C_SMBUS_I2C_BLOCK_DATA;
+                smb.data = block_buffer;
 
                 ret = ioctl(bus, I2C_SMBUS, &smb);
                 if(ret < 0) {
-                    printf("Failed to perform smbus word write (errno: %d)\n", errno);
+                    printf("Failed to perform smbus byte read\n");
                     return -1;
                 }
 
-                ++offset;
-                ++dev_offset;
+                offset += this_len;
+                dev_offset += this_len;
 
                 /* Wait between bytes - we could be talking to an eeprom and we
                  * get a NACK if it is busy committing data to the device */
