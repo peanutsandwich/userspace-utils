@@ -30,6 +30,7 @@
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 
 #define OP_INDEX        1
 #define BUS_INDEX       2
