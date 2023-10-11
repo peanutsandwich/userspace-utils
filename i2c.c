@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
         wr_count = 1;
         wr_data = calloc(1, 1);
         offset = strtoul(argv[ARGS_START], &end, 0);
-        wr_data[0] = (unsigned char)offset;
+        wr_data[0] = (unsigned char)(offset & 0xff);
         rd_count = strtoul(argv[ARGS_START + 1], &end, 0);
         if(!rd_count) {
             printf("Please provide a non-zero number of bytes to read\n");
@@ -133,8 +133,8 @@ int main(int argc, char* argv[])
         wr_count = 2;
         wr_data = calloc(1, 2);
         offset = strtoul(argv[ARGS_START], &end, 0);
-        wr_data[0] = (unsigned char)offset >> 8;
-        wr_data[1] = (unsigned char)offset & 0xff;
+        wr_data[0] = (unsigned char)(offset >> 8);
+        wr_data[1] = (unsigned char)(offset & 0xff);
         rd_count = strtoul(argv[ARGS_START + 1], &end, 0);
         if(!rd_count) {
             printf("Please provide a non-zero number of bytes to read\n");
@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
         wr_data = calloc(1, wr_count);
 
         offset = strtoul(argv[ARGS_START], &end, 0);
-        wr_data[0] = (unsigned char)offset;
+        wr_data[0] = (unsigned char)(offset & 0xff);
         data_idx = 1;
 
         for(i = ARGS_START+1; i < argc; ++i) {
@@ -197,8 +197,8 @@ int main(int argc, char* argv[])
         wr_data = calloc(1, wr_count);
 
         offset = strtoul(argv[ARGS_START], &end, 0);
-        wr_data[0] = (unsigned char)offset >> 8;
-        wr_data[1] = (unsigned char)offset & 0xff;
+        wr_data[0] = (unsigned char)(offset >> 8);
+        wr_data[1] = (unsigned char)(offset & 0xff);
         data_idx = 2;
 
         for(i = ARGS_START+1; i < argc; ++i) {
