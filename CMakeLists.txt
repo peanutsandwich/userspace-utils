@@ -4,6 +4,7 @@ project(userspace_utils)
 option(I2C      "Tools for interacting with I2C devices from userspace"     ON)
 option(IO       "Tools for interacting with x86 IO space"                   ON)
 option(PCIE     "Tools for interacting with PCIe devices from userspace"    ON)
+option(SPI      "Tools for interacting with SPI devices from userspace"     ON)
 
 if(I2C)
     add_executable(i2c i2c.c)
@@ -23,5 +24,12 @@ if(PCIE)
     add_executable(pci_config pci_config.c)
     install(
         TARGETS pci_config
+        DESTINATION bin)
+endif()
+
+if(SPI)
+    add_executable(spi spi.c)
+    install(
+        TARGETS spi
         DESTINATION bin)
 endif()
